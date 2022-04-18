@@ -6,6 +6,7 @@ namespace Structures.ViewModels
     public class ApiResponse<T>
     {
         public MetaData MetaData { get; set; }
+        public Summary Summary { get; set; }
         public IList<T> Records { get; set; }
 
         public ApiResponse(IList<T> items, long? count, int pageNumber, int pageSize)

@@ -1,7 +1,7 @@
 ﻿using Structures.Models;
+using Structures.ViewModels;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Structures.ViewModels;
 
 namespace Services
 {
@@ -9,6 +9,6 @@ namespace Services
     {
         Task InsertOrUpdateCovidDataAsync(List<LocationData> locationData, List<TimeSeriesData> timeSeriesData);
 
-        Task<IList<CovidDataResponse>> SearchAsync(CovidDataRequest request);
+        Task<CovidDataResponse> SearchAsync(CovidDataRequest request);
     }
 }

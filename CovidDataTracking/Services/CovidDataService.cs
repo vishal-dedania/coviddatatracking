@@ -2,7 +2,9 @@
 using Persistence;
 using Structures.Models;
 using Structures.ViewModels;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -84,16 +86,79 @@ namespace Services
             }
         }
 
-        public async Task<IList<CovidDataResponse>> SearchAsync(CovidDataRequest request)
+        public async Task<CovidDataResponse> SearchAsync(CovidDataRequest request)
         {
-            return await _sqlRepository.QueryAsync<CovidDataResponse>(QueryBuilder(request));
+            var records = await _sqlRepository.QueryAsync<CovidRecords>(QueryBuilder(request));
+
+            var response = new CovidDataResponse
+            {
+                Records = records,
+                Summary = CalculateSummary(records)
+            };
+
+            return response;
+        }
+
+        private Summary CalculateSummary(IList<CovidRecords> records)
+        {
+            var maxCases = records.OrderByDescending(w => w.TotalCases).FirstOrDefault();
+            var minCases = records.Where(w => w.TotalCases > 0).OrderBy(w => w.TotalCases).FirstOrDefault();
+
+            var summary = new Summary
+            {
+                AverageDailyCases = (records.Sum(w => w.TotalCases) / records.Count).RoundOffNearestTen(),
+                NumberOfCases = new NumberOfCases
+                {
+                    Maximum = new CasesDetail
+                    {
+                        Date = maxCases.Date,
+                        Total = maxCases.TotalCases
+                    },
+                    Minimum = new CasesDetail
+                    {
+                        Date = minCases.Date,
+                        Total = minCases.TotalCases
+                    }
+                }
+            };
+
+            return summary;
         }
 
         private string QueryBuilder(CovidDataRequest request)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("select * from LocationData");
-            return "";
+            var sqlWhere = new StringBuilder();
+
+            if (!string.IsNullOrWhiteSpace(request.County))
+            {
+                sqlWhere.Append($" and Admin2 = '{request.County.IncludeSingleQuote()}'");
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.City))
+            {
+                sqlWhere.Append($" and Province_State = '{request.State.IncludeSingleQuote()}'");
+            }
+
+            if (request.From != DateTime.MinValue)
+            {
+                sqlWhere.Append($" and td.Date >= '{request.From:d}'");
+            }
+
+            if (request.To != DateTime.MinValue)
+            {
+                sqlWhere.Append($" and td.Date <= '{request.To:d}'");
+            }
+
+            //TODO: Improvement - implement db side pagination
+            sb.Append(@$"select ld.Admin2 as County, ld.Province_State as State, 
+                        ld.Lat as Latitude, ld.Long as Longitude, td.Date, td.Value as TotalCases
+                        from LocationData ld with (nolock)
+                        inner join TimeSeriesData td with (nolock)
+                        on ld.UID = td.LocationUId where 1 = 1
+                            {sqlWhere} order by td.Date desc");
+
+            return sb.ToString();
         }
     }
 }

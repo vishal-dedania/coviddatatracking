@@ -21,9 +21,7 @@ namespace CovidDataWebApi.Controllers
         public async Task<IActionResult> Get([FromQuery] CovidDataRequest request)
         {
             var result = await _covidDataService.SearchAsync(request);
-            return Ok(new ApiResponse<CovidDataResponse>(result,
-                result.FirstOrDefault()?.TotalCount,
-                request.PageNumber, request.PageSize));
+            return Ok(result);
         }
     }
 }
