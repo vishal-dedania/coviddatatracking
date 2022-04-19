@@ -1,8 +1,10 @@
+using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 using Persistence;
 using Services;
 
@@ -24,6 +26,16 @@ namespace CovidDataWebApi
 
             services.AddSingleton<ICovidDataService, CovidDataService>();
             services.AddSingleton<ISqlRepository, SqlRepository>();
+
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "Covid Data Api",
+                    Description = "Covid Tracking Data Api Project"
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -31,6 +43,12 @@ namespace CovidDataWebApi
         {
             if (env.IsDevelopment())
             {
+                app.UseSwagger();
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                    options.RoutePrefix = string.Empty;
+                });
                 app.UseDeveloperExceptionPage();
             }
 
