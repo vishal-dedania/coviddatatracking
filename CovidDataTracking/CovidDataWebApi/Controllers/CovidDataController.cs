@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Mvc;
 using Services;
 using Structures.ViewModels;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace CovidDataWebApi.Controllers
 {
@@ -21,7 +21,26 @@ namespace CovidDataWebApi.Controllers
         public async Task<IActionResult> Get([FromQuery] CovidDataRequest request)
         {
             var result = await _covidDataService.SearchAsync(request);
-            return Ok(result);
+
+            if (result.Records.Any())
+            {
+                return Ok(result);
+            }
+
+            return NotFound(result);
+        }
+
+        [HttpGet("daily")]
+        public async Task<IActionResult> Daily([FromQuery] CovidDataRequest request)
+        {
+            var result = await _covidDataService.GetDailyBreakDownDataAsync(request);
+
+            if (result.Records.Any())
+            {
+                return Ok(result);
+            }
+
+            return NotFound(result);
         }
     }
 }

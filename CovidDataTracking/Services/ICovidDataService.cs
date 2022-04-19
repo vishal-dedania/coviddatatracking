@@ -10,5 +10,6 @@ namespace Services
         Task InsertOrUpdateCovidDataAsync(List<LocationData> locationData, List<TimeSeriesData> timeSeriesData);
 
         Task<CovidDataResponse> SearchAsync(CovidDataRequest request);
+        Task<CovidDailyBreakDownDataResponse> GetDailyBreakDownDataAsync(CovidDataRequest request);
     }
 }

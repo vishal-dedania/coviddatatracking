@@ -1,7 +1,9 @@
 ﻿using System;
+using Structures.Validations;
 
 namespace Structures.ViewModels
 {
+    [AtLeastOneProperty("County", "State", "City", ErrorMessage = "You must supply at least County or State or City value")]
     public class CovidDataRequest : BaseRequest
     {
         public string County { get; set; }
