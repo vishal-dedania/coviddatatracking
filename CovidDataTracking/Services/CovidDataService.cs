@@ -291,28 +291,38 @@ Count_CTE AS (
         private string BuildWhereClause(CovidDataRequest request)
         {
             var sqlWhere = new StringBuilder();
+            var isValidRequest = false;
 
             if (!string.IsNullOrWhiteSpace(request.County))
             {
                 sqlWhere.Append($" and Admin2 = '{request.County.IncludeSingleQuote()}'");
+                isValidRequest = true;
             }
 
             if (request.From != DateTime.MinValue)
             {
                 sqlWhere.Append($" and td.Date >= '{request.From:d}'");
+                isValidRequest = true;
             }
 
             if (request.To != DateTime.MinValue)
             {
                 sqlWhere.Append($" and td.Date <= '{request.To:d}'");
+                isValidRequest = true;
             }
 
             if (!string.IsNullOrWhiteSpace(request.State))
             {
                 sqlWhere.Append($" and ld.Province_State = '{request.State}'");
+                isValidRequest = true;
             }
 
             sqlWhere.Append($" and td.Value > 0");
+
+            if (!isValidRequest)
+            {
+                sqlWhere.Append($" and 1 = 0");
+            }
 
             return sqlWhere.ToString();
         }

@@ -23,7 +23,7 @@ namespace Persistence
         public async Task<T> Find<T>(string query)
         {
             await using var conn = GetSqlConnection();
-            return await conn.QueryFirstAsync<T>(query);
+            return await conn.QueryFirstOrDefaultAsync<T>(query);
         }
 
         private SqlConnection GetSqlConnection()
