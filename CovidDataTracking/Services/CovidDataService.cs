@@ -89,6 +89,8 @@ namespace Services
 
         public async Task<CovidDailyBreakDownDataResponse> GetDailyBreakDownDataAsync(CovidDataRequest request)
         {
+            await PopulateCountyOrStateDetailsIfMissing(request);
+
             var records = await _sqlRepository.QueryAsync<CovidRecordsDaily>(QueryBuilderDailyBreakDown(request));
 
             var response = new CovidDailyBreakDownDataResponse
@@ -102,6 +104,8 @@ namespace Services
 
         public async Task<CovidDataResponse> SearchAsync(CovidDataRequest request)
         {
+            await PopulateCountyOrStateDetailsIfMissing(request);
+
             var records = await _sqlRepository.QueryAsync<CovidRecords>(QueryBuilder(request));
 
             var response = new CovidDataResponse
@@ -111,7 +115,25 @@ namespace Services
             };
 
             return response;
-        }   
+        }
+
+        private async Task PopulateCountyOrStateDetailsIfMissing(CovidDataRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request.County))
+            {
+                if (!string.IsNullOrWhiteSpace(request.ZipCode))
+                {
+                    var sql = $@"select county_name as County from USACityData where zips like '%{request.ZipCode}%'";
+                    request.County = await _sqlRepository.Find<string>(sql);
+                }
+                
+                if (string.IsNullOrWhiteSpace(request.County) && !string.IsNullOrWhiteSpace(request.City))
+                {
+                    var sql = $@"select county_name as County from USACityData where city_ascii = '{request.City}'";
+                    request.County = await _sqlRepository.Find<string>(sql);
+                }
+            }
+        }
 
         private Summary CalculateSummary(CovidDataRequest request, CovidRecords record)
         {
@@ -273,11 +295,6 @@ Count_CTE AS (
             if (!string.IsNullOrWhiteSpace(request.County))
             {
                 sqlWhere.Append($" and Admin2 = '{request.County.IncludeSingleQuote()}'");
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.City))
-            {
-                sqlWhere.Append($" and Province_State = '{request.State.IncludeSingleQuote()}'");
             }
 
             if (request.From != DateTime.MinValue)

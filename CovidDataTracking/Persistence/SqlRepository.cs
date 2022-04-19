@@ -20,6 +20,12 @@ namespace Persistence
             return await conn.QueryAsync<T>(query) as IList<T>;
         }
 
+        public async Task<T> Find<T>(string query)
+        {
+            await using var conn = GetSqlConnection();
+            return await conn.QueryFirstAsync<T>(query);
+        }
+
         private SqlConnection GetSqlConnection()
         {
             return new SqlConnection(string.Format(DbConstants.DefaultConnection));

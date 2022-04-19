@@ -7,5 +7,6 @@ namespace Persistence
     {
         Task<int> InsertAsync(string query);
         Task<IList<T>> QueryAsync<T>(string query);
+        Task<T> Find<T>(string query);
     }
 }
